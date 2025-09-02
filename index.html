@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Teacher & Class Timetable Viewer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      text-align: center;
+      padding: 50px;
+    }
+    h1 {
+      color: #444;
+    }
+    .selector {
+      margin: 20px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      width: 300px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .note {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <h1>Teacher & Class Timetable Viewer</h1>
+  
+  <div class="selector">
+    <label for="teacherSelect">Select Teacher:</label>
+    <select id="teacherSelect">
+      <option value="">-- Select a Teacher --</option>
+    </select>
+  </div>
+
+  <div class="selector">
+    <label for="classSelect">Select Class:</label>
+    <select id="classSelect">
+      <option value="">-- Select a Class --</option>
+    </select>
+  </div>
+
+  <button id="previewBtn">Preview Timetable</button>
+
+  <p class="note">Click Preview to open the timetable image in a new tab.</p>
+
+  <script>
+    // <-- Update these with your actual published CSV links -->
+    const teachersCSV = "PASTE_TEACHERS_CSV_LINK_HERE";
+    const classesCSV = "PASTE_CLASSES_CSV_LINK_HERE";
+
+    // Utility: fetch CSV and convert to array of objects
+    async function fetchCSV(url) {
+      const res = await fetch(url);
+      const text = await res.text();
+      const rows = text.trim().split("\n").map(r => r.split(","));
+      const headers = rows.shift().map(h => h.trim());
+      return rows.map(r => {
+        const obj = {};
+        headers.forEach((h, i) => obj[h] = (r[i] || "").trim());
+        return obj;
+      });
+    }
+
+    let teachers = [];
+    let classes = [];
+
+    async function init() {
+      try {
+        teachers = await fetchCSV(teachersCSV);
+        classes = await fetchCSV(classesCSV);
+
+        const teacherSelect = document.getElementById("teacherSelect");
+        const classSelect = document.getElementById("classSelect");
+
+        teachers.forEach(t => {
+          const opt = document.createElement("option");
+          opt.value = t.ImageURL || t["Image URL"] || "";
+          opt.textContent = t.Name || "Unnamed Teacher";
+          teacherSelect.appendChild(opt);
+        });
+
+        classes.forEach(c => {
+          const opt = document.createElement("option");
+          opt.value = c.ImageURL || c["Image URL"] || "";
+          opt.textContent = c.Name || "Unnamed Class";
+          classSelect.appendChild(opt);
+        });
+      } catch (err) {
+        alert("Could not load data. Check your published CSV links.");
+        console.error(err);
+      }
+    }
+
+    document.getElementById("previewBtn").addEventListener("click", () => {
+      const teacherURL = document.getElementById("teacherSelect").value;
+      const classURL = document.getElementById("classSelect").value;
+      let urlToOpen = teacherURL || classURL;
+
+      if (!urlToOpen) {
+        alert("Please select a teacher or a class first.");
+        return;
+      }
+      window.open(urlToOpen, "_blank");
+    });
+
+    init();
+  </script>
+</body>
+</html>
